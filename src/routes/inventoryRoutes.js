@@ -34,7 +34,7 @@ router.get("/",async(req, res)=>{
 
 // Adjust product stock
 
-router.post('/adjust-stock', async(req, res)=>{
+router.post('/', async(req, res)=>{
     try{
         const {product_id, quantity}=req.body
 

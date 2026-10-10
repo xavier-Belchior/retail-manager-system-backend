@@ -28,7 +28,7 @@ router.get("/", async (req, res) => {
 
 
 
-router.post("/create", async (req, res) => {
+router.post("/", async (req, res) => {
   const client = await pool.connect();
 
   try {

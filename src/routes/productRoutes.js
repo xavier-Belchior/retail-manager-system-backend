@@ -3,19 +3,38 @@ import pool from "../db/db.js";
 
 const router = express.Router();
 
-// GET all products
+
 router.get("/", async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM products");
+    const result = await pool.query(`
+      SELECT
+        p.id,
+        p.name,
+        p.sku,
+        p.barcode,
+        p.category_id,
+        c.name AS category,
+        p.price,
+        p.stock,
+        p.min_stock,
+        p.supplier_id,
+        s.name AS supplier,
+        p.created_at,
+        p.updated_at
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN suppliers s ON p.supplier_id = s.id
+      ORDER BY p.id DESC
+    `);
+
     res.json(result.rows);
   } catch (error) {
     console.error(error);
     res.status(500).json({
-      message: "Error to fetch products from the database",
+      message: "Error to fetch products",
     });
   }
 });
-
 // Create product
 router.post("/create", async (req, res) => {
   try {

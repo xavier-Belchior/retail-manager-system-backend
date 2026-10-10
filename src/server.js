@@ -8,8 +8,8 @@ import customerRoutes from './routes/customerRoutes.js'
 import saleRoutes from "./routes/saleRoutes.js"
 import dashboardRoutes from "./routes/dashbordRoutes.js"
 import reportRoutes from "./routes/reportRoutes.js"
-
-
+import authRoutes from "./routes/authRoutes.js"
+import authenticateToken from "./middleware/authMiddleware.js"
 
 const app=express()
 const PORT=process.env.PORT || 4000
@@ -20,11 +20,17 @@ app.use(express.json())
 
 // ROUTES 
 
-// GET all products
+// authRoutes
+app.use("/api/auth", authRoutes)
+
+// protect the remain API routes.
+app.use("/api", authenticateToken)
+// get product
 app.use('/api/products',productRoutes)
+// add product
 app.use('/api/products/create',productRoutes)
-app.use('/api/products/:id',productRoutes)
-app.use('/api/products/barcode/:barcode',productRoutes)
+//update and delete products and barcode
+app.use('/api/products/',productRoutes)
 // Get all categories
 app.use('/api/categories', categorieRoutes)
 
@@ -33,11 +39,10 @@ app.use('/api/suppliers', supplierRoutes)
 
 // Get inventory
 app.use('/api/inventory', inventoryRoutes)
-app.use('/api/inventory/adjust-stock', inventoryRoutes)
+app.use('/api/inventory/adjust', inventoryRoutes)
 
 // Get all customers
 app.use('/api/customers', customerRoutes)
-app.use('/api/customers/create', customerRoutes)
 
 // Get all sales
 app.use('/api/sales', saleRoutes)

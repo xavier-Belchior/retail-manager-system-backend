@@ -19,7 +19,7 @@ router.get("/", async (req, res) => {
 
 
 // Create customer
-router.post('/create', async(req, res)=>{
+router.post('/', async(req, res)=>{
     try{
         const {name, phone, email}=req.body
 
