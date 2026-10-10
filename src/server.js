@@ -18,6 +18,11 @@ const PORT=process.env.PORT || 4000
 app.use(cors())
 app.use(express.json())
 
+// API health check
+app.get("/", (req, res) => {
+  res.json({ message: "API is running" });
+});
+
 // ROUTES 
 
 // authRoutes
