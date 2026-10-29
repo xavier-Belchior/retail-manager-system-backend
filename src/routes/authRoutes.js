@@ -28,7 +28,7 @@ if (!identifier || !password) {
 }
 
 const result = await pool.query(
-  `SELECT id, name, email, password_hash, role
+  `SELECT id, name, email, password_hash, role, must_change_password
    FROM users
    WHERE LOWER(email) = LOWER($1)
    LIMIT 1`,
@@ -68,12 +68,13 @@ const token = jwt.sign(
 return res.status(200).json({
   message: "Login successful",
   token,
-  user: {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-  },
+ user: {
+  id: user.id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+  must_change_password: user.must_change_password,
+},
 });
 
 
