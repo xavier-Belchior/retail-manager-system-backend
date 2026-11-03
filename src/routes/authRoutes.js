@@ -7,14 +7,45 @@ const router = express.Router();
 
 
 
-router.get("/me", authenticateToken, (req, res) => {
-  res.status(200).json({
+router.get("/me", authenticateToken, async(req, res) => {
+    try{
+        const result=await pool.query(
+          `SELECT id, role, must_change_password
+          FROM users
+          WHERE id =$1
+          LIMIT 1`,
+          [req.user.id]
+        )
+
+        if(result.rows.length === 0 ){
+          return res.status(404).json({
+            message:"User not found"
+          })
+        }
+
+        const user = result.rows[0]
+
+
+    res.status(200).json({
     authenticated: true,
     user: {
-      id: req.user.id,
-      role: req.user.role,
+      id: user.id,
+      role: user.role,
+      must_change_password:user.must_change_password
     },
   });
+
+    }catch (error) {
+      console.error("Error in /me route:", error);
+      return res.status(500).json({
+        message: "Internal server error",
+      });
+
+    }
+
+
+
+ 
 });
 router.post("/login", async (req, res) => {
 try {
