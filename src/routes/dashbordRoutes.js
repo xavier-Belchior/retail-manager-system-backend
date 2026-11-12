@@ -9,6 +9,7 @@ router.get("/", async (req, res) => {
     const productsResult = await pool.query(`
       SELECT COUNT(*) AS total_products
       FROM products
+      WHERE is_active = TRUE
     `);
 
     const salesResult = await pool.query(`
@@ -29,7 +30,7 @@ router.get("/", async (req, res) => {
     const lowStockResult = await pool.query(`
       SELECT COUNT(*) AS low_stock
       FROM products
-      WHERE stock <= min_stock
+      WHERE stock <= min_stock AND is_active = TRUE
     `);
 
     res.json({

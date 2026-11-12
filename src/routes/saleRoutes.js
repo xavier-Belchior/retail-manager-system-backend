@@ -5,18 +5,20 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    const result = await pool.query(
-      `SELECT 
-        s.id,
-         s.total, 
-         s.payment_method,
-          s.status, 
-          s.created_at, 
-          c.name AS customer
-             FROM sales s  
-             LEFT JOIN customers c ON s.customer_id = c.id
-             ORDER BY s.created_at DESC `,
-    );
+   const result = await pool.query(
+  `SELECT 
+    s.id,
+    s.total,
+    s.payment_method,
+    s.status,
+    s.created_at,
+    c.name AS customer,
+    u.name AS employee
+  FROM sales s
+  LEFT JOIN customers c ON s.customer_id = c.id
+  LEFT JOIN users u ON s.user_id = u.id
+  ORDER BY s.created_at DESC`,
+);
     res.json(result.rows);
   } catch (error) {
     console.error(error);
@@ -29,6 +31,7 @@ router.get("/", async (req, res) => {
 
 
 router.post("/", async (req, res) => {
+
   const client = await pool.connect();
 
   try {
@@ -80,15 +83,16 @@ router.post("/", async (req, res) => {
         subtotal,
       });
     }
-
+console.log("Authenticated user:", req.user);
     // 2. Create sale
-    const saleResult = await client.query(
-      `INSERT INTO sales
-        (customer_id, total, payment_method)
-       VALUES ($1, $2, $3)
-       RETURNING *`,
-      [customer_id || null, total, payment_method]
-    );
+ const saleResult = await client.query(
+  `INSERT INTO sales
+    (customer_id, total, payment_method, user_id)
+   VALUES ($1, $2, $3, $4)
+   RETURNING *`,
+  [customer_id || null, total, payment_method, req.user.id]
+);
+console.log("Created sale:", saleResult.rows[0]);
 
     // IMPORTANT
     const sale = saleResult.rows[0];
@@ -139,6 +143,7 @@ router.post("/", async (req, res) => {
 });
 
 // GET sale by ID
+
 router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -151,9 +156,11 @@ router.get("/:id", async (req, res) => {
         s.payment_method,
         s.status,
         s.created_at,
-        c.name AS customer
+        c.name AS customer,
+        u.name AS employee
       FROM sales s
       LEFT JOIN customers c ON s.customer_id = c.id
+      LEFT JOIN users u ON s.user_id = u.id
       WHERE s.id = $1
       `,
       [id]
@@ -175,8 +182,9 @@ router.get("/:id", async (req, res) => {
         si.unit_price,
         si.subtotal
       FROM sale_items si
-      JOIN products p ON si.product_id = p.id
+      LEFT JOIN products p ON si.product_id = p.id
       WHERE si.sale_id = $1
+      ORDER BY si.id ASC
       `,
       [id]
     );
@@ -186,7 +194,7 @@ router.get("/:id", async (req, res) => {
       items: itemsResult.rows,
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching sale:", error);
 
     res.status(500).json({
       message: "Error fetching sale",

@@ -18,7 +18,7 @@ router.get("/",async(req, res)=>{
             c.name AS category,
             s.name AS supplier
             FROM products p LEFT JOIN categories c ON p.category_id=c.id 
-            LEFT JOIN suppliers s ON p.supplier_id = s.id ORDER BY p.id`)
+            LEFT JOIN suppliers s ON p.supplier_id = s.id WHERE p.is_active=TRUE ORDER BY p.id`)
 
         res.json({
             message:"Inventory fetched successfully",

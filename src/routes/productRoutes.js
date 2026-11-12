@@ -24,6 +24,7 @@ router.get("/", async (req, res) => {
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
       LEFT JOIN suppliers s ON p.supplier_id = s.id
+      WHERE p.is_active = TRUE
       ORDER BY p.id DESC
     `);
 
@@ -154,32 +155,35 @@ router.put("/:id", async (req, res) => {
     });
   }
 });
-
-// Delete product
+// Soft delete product
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
     const result = await pool.query(
-      `DELETE FROM products WHERE id=$1 RETURNING *`,
+      `UPDATE products
+       SET is_active = FALSE
+       WHERE id = $1 AND is_active = TRUE
+       RETURNING *`,
       [id],
     );
 
     if (result.rows.length === 0) {
       return res.status(404).json({
-        message: "Product not found",
+        message: "Product not found or already deactivated",
       });
     }
+
     res.json({
-      message: "Product deleted successfully",
+      message: "Product deactivated successfully",
       product: result.rows[0],
     });
   } catch (error) {
-    console.error(error);
+    console.error("Error deactivating product:", error);
+
     res.status(500).json({
-      message: "Error deleting product",
+      message: "Error deactivating product",
     });
   }
 });
-
 export default router;
