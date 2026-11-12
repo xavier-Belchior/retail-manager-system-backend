@@ -35,8 +35,7 @@ router.get("/", async (req, res) => {
       message: "Error to fetch products",
     });
   }
-});
-// Create product
+});// Create product
 router.post("/create", async (req, res) => {
   try {
     const {
@@ -50,18 +49,46 @@ router.post("/create", async (req, res) => {
       min_stock,
     } = req.body;
 
+    const normalizedSku = sku?.trim() || null;
+    const normalizedBarcode = barcode?.trim() || null;
+
     const result = await pool.query(
-      `INSERT INTO products (name, sku, barcode, category_id, supplier_id, price, stock, min_stock) 
-        VALUES($1, $2, $3, $4, $5, $6, $7, $8)
-         RETURNING *`,
-      [name, sku, barcode, category_id, supplier_id, price, stock, min_stock],
+      `INSERT INTO products 
+        (name, sku, barcode, category_id, supplier_id, price, stock, min_stock)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       RETURNING *`,
+      [
+        name,
+        normalizedSku,
+        normalizedBarcode,
+        category_id,
+        supplier_id,
+        price,
+        stock,
+        min_stock,
+      ],
     );
 
     res.status(201).json(result.rows[0]);
   } catch (error) {
-    console.error(error);
+    console.error("Error creating product:", error);
+
+    if (error.code === "23505") {
+      if (error.constraint === "products_active_barcode_unique") {
+        return res.status(409).json({
+          message: "Este código de barras já está associado a um produto ativo.",
+        });
+      }
+
+      if (error.constraint === "products_active_sku_unique") {
+        return res.status(409).json({
+          message: "Este SKU já está associado a um produto ativo.",
+        });
+      }
+    }
+
     res.status(500).json({
-      message: " Error to create product",
+      message: "Não foi possível criar o produto. Tente novamente.",
     });
   }
 });
